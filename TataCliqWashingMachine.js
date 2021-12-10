@@ -12,7 +12,7 @@ var dbConn;
 var dbClient;
 
 const port = process.env.PORT || 3000;
-const tataCliqTelevision = express();
+const tataCliqWashingMachine = express();
 
 async function find() {
   try {
@@ -25,9 +25,9 @@ async function find() {
     dbConn = await client.db();
     dbClient = client;
 
-    for (let pageNumber = 0; pageNumber <= 8; pageNumber++) {
+    for (let pageNumber = 0; pageNumber <= 10; pageNumber++) {
       let res = await axios.get(
-        `https://prodsearch.tatacliq.com/products/mpl/search/?searchText=%3Arelevance%3Acategory%3AMSH1216%3AinStockFlag%3Atrue&isKeywordRedirect=true&isKeywordRedirectEnabled=false&channel=WEB&isMDE=true&isTextSearch=false&isFilter=false&qc=false&test=mm.new&page=${pageNumber}&isSuggested=false&isPwa=true&pageSize=40&typeID=all`
+        `ttps://prodsearch.tatacliq.com/products/mpl/search/?searchText=%3Arelevance%3Acategory%3AMSH1256%3AinStockFlag%3Atrue&isKeywordRedirect=true&isKeywordRedirectEnabled=false&channel=WEB&isMDE=true&isTextSearch=false&isFilter=false&qc=false&test=mm.new&page=${pageNumber}&isSuggested=false&isPwa=true&pageSize=40&typeID=all`
       );
       const prods = res.data.searchresult;
       for (const prod of prods) {
@@ -44,15 +44,7 @@ async function find() {
         const features = await axios.get(
           `https://www.tatacliq.com/marketplacewebservices/v2/mpl/products/productDetails/${prodId}?isPwa=true&isMDE=true&strategy=new`
         );
-        const resolution = features.data.details[0].value;
-        const display = features.data.details[1].value;
-        const speaker = features.data.details[2].value;
-        const operating_system = features.data.details[3].value;
-        const model_number = features.data.details[4].value;
-        let screen_size = features.data.highlights;
-        if (screen_size !== undefined) {
-          screen_size = features.data.highlights[0].shortDescription;
-        }
+        const capacity = features.data.details[1].value;
         const finalAns = {
           name,
           brand,
@@ -63,26 +55,22 @@ async function find() {
           totalRatings,
           totalReviews,
           web_url,
-          resolution,
-          display,
-          speaker,
-          operating_system,
-          model_number,
-          screen_size,
+          capacity,
         };
         doc.push(finalAns);
       }
+      console.log(pageNumber);
     }
-    // //console.log(doc)
+    //console.log(doc)
     // const j2cp = new json2csv();
     // const csv = j2cp.parse(doc);
-    // fs.appendFile("televison1.csv", csv, function (err) {
-    //   if (err) throw err;
-    //      console.log("Saved!");
-    //      console.log(new Date().toLocaleString());
-    //   });
+    // fs.appendFile("referigerator.csv", csv, function (err) {
+    // if (err) throw err;
+    //    console.log("Saved!");
+    //    console.log(new Date().toLocaleString());
+    // });
 
-    const collectionName = "television";
+    const collectionName = "washingMachine";
     const collection = dbConn.collection(collectionName);
     collection.deleteMany({});
     await collection.insertMany(doc, (err, result) => {
@@ -98,10 +86,10 @@ async function find() {
   }
 }
 
-const job = nodeCron.schedule("*8 * * *", find);
-
-tataCliqTelevision.get("/", (req, res) => {
+const job = nodeCron.schedule("*/6 * * * *", find);
+//find()
+tataCliqWashingMachine.get("/", (req, res) => {
   res.send("hello world");
 });
 
-tataCliqTelevision.listen(port);
+tataCliqWashingMachine.listen(port);
